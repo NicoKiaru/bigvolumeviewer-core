@@ -67,11 +67,11 @@ public class Example09 {
         RandomAccessibleInterval<UnsignedByteType> labelImage_2 = get8BitsLabelImage(imageVoxelSize, numberOfPoints/2);
 
         final SharedQueue queue_1 = new SharedQueue( Runtime.getRuntime().availableProcessors()-1 );
-        Img<UnsignedByteType> nonVRAI8bits_1 = get3DBorderLabelImage8Bits(labelImage_1);
+        Img<UnsignedByteType> nonVRAI8bits_1 = get3DBorderLabelImage8Bits(labelImage_1, 64, 64, 64);
         RandomAccessibleInterval<Volatile<UnsignedByteType>> rai8bits_1 = VolatileViews.wrapAsVolatile(nonVRAI8bits_1, queue_1);
 
         final SharedQueue queue_2 = new SharedQueue( Runtime.getRuntime().availableProcessors()-1 );
-        Img<UnsignedByteType> nonVRAI8bits_2 = get3DBorderLabelImage8Bits(labelImage_2);
+        Img<UnsignedByteType> nonVRAI8bits_2 = get3DBorderLabelImage8Bits(labelImage_2, 32, 32, 32);
         RandomAccessibleInterval<Volatile<UnsignedByteType>> rai8bits_2 = VolatileViews.wrapAsVolatile(nonVRAI8bits_2, queue_2);
 
         Img<UnsignedShortType> nonVRAI16bits = get3DBorderLabelImage16Bits(labelImage_1);
@@ -106,9 +106,9 @@ public class Example09 {
         return getTestLabelImage(iterableFloat, imageVoxelSize);
     }
 
-    public static <T extends Type<T> & Comparable<T> > Img<UnsignedByteType> get3DBorderLabelImage8Bits(RandomAccessibleInterval<T> lblImg) {
+    public static <T extends Type<T> & Comparable<T> > Img<UnsignedByteType> get3DBorderLabelImage8Bits(RandomAccessibleInterval<T> lblImg, int... cellDs) {
         // Make edge display on demand
-        final int[] cellDimensions = new int[] { 64, 64, 64 };
+        final int[] cellDimensions = cellDs;//new int[] { 64, 64, 64 };
 
         // Cached Image Factory Options
         final DiskCachedCellImgOptions factoryOptions = DiskCachedCellImgOptions.options()
