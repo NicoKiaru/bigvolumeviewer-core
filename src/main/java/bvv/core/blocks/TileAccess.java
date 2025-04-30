@@ -40,6 +40,10 @@ import net.imglib2.cache.ref.WeakRefLoaderCache;
 import net.imglib2.img.cell.AbstractCellImg;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.PrimitiveType;
+import net.imglib2.type.numeric.integer.UnsignedByteType;
+import net.imglib2.type.numeric.integer.UnsignedShortType;
+import net.imglib2.type.volatiles.VolatileUnsignedByteType;
+import net.imglib2.type.volatiles.VolatileUnsignedShortType;
 import net.imglib2.util.Fraction;
 
 import static net.imglib2.type.PrimitiveType.BYTE;
@@ -115,7 +119,7 @@ public class TileAccess< S >
 				img = ( ( VolatileView ) img ).getVolatileViewData().getImg();
 			final boolean cellimg = img instanceof AbstractCellImg;
 
-			if ( cacheSpec.format() == Texture.InternalFormat.R16 && cellimg )
+			if ( img.getType() instanceof UnsignedShortType || img.getType() instanceof VolatileUnsignedShortType && cellimg )
 			{
 				final boolean volatil = type instanceof Volatile;
 				return new TileAccess<>(
@@ -125,7 +129,7 @@ public class TileAccess< S >
 						new CopySubArrayImp.ShortToAddress(),
 						cacheSpec
 				);
-			} else if ( cacheSpec.format() == Texture.InternalFormat.R8 && cellimg )
+			} else if ( img.getType() instanceof UnsignedByteType || img.getType() instanceof VolatileUnsignedByteType && cellimg )// ( cacheSpec.format() == Texture.InternalFormat.R8 && cellimg )
 			{
 				final boolean volatil = type instanceof Volatile;
 				return new TileAccess<>(
