@@ -221,7 +221,6 @@ public class VolumeRenderer
 	{
 		final MultiVolumeShaderMip progvol = new MultiVolumeShaderMip( signature, true, 1.0 );
 		progvol.setTextureCache( textureCacheR8 );
-		cannot set 2 caches in the shader
 		return progvol;
 	}
 
@@ -411,7 +410,7 @@ public class VolumeRenderer
 			final MultiResolutionStack3D< ? > stack = multiResStacks.get( i );
 			if (volumes.size() == i) { // we need to create it
 				volumes.add(new VolumeBlocks(
-						(stack.getType() instanceof UnsignedShortType?textureCacheR16:textureCacheR8)));
+						(stack.getType() instanceof UnsignedShortType || stack.getType() instanceof VolatileUnsignedShortType?textureCacheR16:textureCacheR8)));
 			}
 			final VolumeBlocks volume = volumes.get( i );
 			volume.init( stack, renderWidth, pv );
