@@ -217,23 +217,11 @@ public class VolumeRenderer
 		quad = new DefaultQuad();
 	}
 
-	/**
-	 * Make sure that we can deal with at least {@code n} blocked volumes.
-	 * I.e., add VolumeBlock luts if necessary.
-	 *
-	 * @param n
-	 * 		number of blocked volumes that shall be rendered
-	 */
-	/*private void needAtLeastNumBlockVolumes( final int n )
-	{
-		while ( volumes.size() < n )
-			volumes.add( new VolumeBlocks( textureCache ) );
-	}*/
-
 	private MultiVolumeShaderMip createMultiVolumeShader( final VolumeShaderSignature signature )
 	{
 		final MultiVolumeShaderMip progvol = new MultiVolumeShaderMip( signature, true, 1.0 );
 		progvol.setTextureCache( textureCacheR8 );
+		cannot set 2 caches in the shader
 		return progvol;
 	}
 
@@ -457,6 +445,9 @@ public class VolumeRenderer
 			fillTasks.addAll( vat.tasks );
 		if ( fillTasks.size() > textureCacheR8.getMaxNumTiles() )
 			fillTasks.subList( textureCacheR8.getMaxNumTiles(), fillTasks.size() ).clear();
+
+		if ( fillTasks.size() > textureCacheR16.getMaxNumTiles() )
+			fillTasks.subList( textureCacheR16.getMaxNumTiles(), fillTasks.size() ).clear();
 
 		try
 		{

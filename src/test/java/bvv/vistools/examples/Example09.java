@@ -86,9 +86,9 @@ public class Example09 {
         bvvSourceBorders8bits_2.setDisplayRange( 0, 2 );
         bvvSourceBorders8bits_2.setColor(new ARGBType(0x000000FF));
 
-        /*final BvvStackSource< ? > bvvSourceBorders16bits = BvvFunctions.show( rai16bits, "Borders 16 bits", BvvOptions.options().addTo(bvvSourceBorders8bits));
-        bvvSourceBorders16bits.setDisplayRange( 0, 2 );
-        bvvSourceBorders16bits.setColor(new ARGBType(0x0000FFFF));*/
+        final BvvStackSource< ? > bvvSourceBorders16bits = BvvFunctions.show( rai16bits, "Borders 16 bits", BvvOptions.options().addTo(bvvSourceBorders8bits_1));
+        bvvSourceBorders16bits.setDisplayRange( 0, 512 );
+        bvvSourceBorders16bits.setColor(new ARGBType(0x0000FFFF));
 
     }
 
