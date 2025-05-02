@@ -33,6 +33,7 @@ import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.interpolation.neighborsearch.NearestNeighborSearchInterpolatorFactory;
 import net.imglib2.neighborsearch.NearestNeighborSearch;
 import net.imglib2.neighborsearch.NearestNeighborSearchOnKDTree;
+import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.Type;
 import net.imglib2.type.numeric.ARGBType;
@@ -62,25 +63,33 @@ public class Example08 {
         long[] imageVoxelSize = new long[] { 512, 512, 512 };
         int numberOfPoints = 800;
 
-        RandomAccessibleInterval<UnsignedByteType> labelImage = get8BitsLabelImage(imageVoxelSize, numberOfPoints);
+        RandomAccessibleInterval<UnsignedByteType> labelImage8 = get8BitsLabelImage(imageVoxelSize, numberOfPoints);
+        RandomAccessibleInterval<UnsignedShortType> labelImage16 = get16BitsLabelImage(imageVoxelSize, numberOfPoints);
+
         //RandomAccessibleInterval<UnsignedShortType> labelImage = get16BitsLabelImage(imageVoxelSize, numberOfPoints);
         //RandomAccessibleInterval<FloatType> labelImage = getFloatLabelImage(imageVoxelSize, numberOfPoints);
 
-        final SharedQueue queue = new SharedQueue( Runtime.getRuntime().availableProcessors()-1 );
-        Img<UnsignedByteType> nonVRAI = get3DBorderLabelImage(labelImage);
-        RandomAccessibleInterval<Volatile<UnsignedByteType>> rai = VolatileViews.wrapAsVolatile(nonVRAI, queue);
-
-        //ImageJFunctions.show(nonVRAI, "Borders"); // SLOW -> triggers a lot of computation. Remove Thread.sleep in this file if you want to do it.
-
-        final BvvStackSource< ? > bvvSourceBorders = BvvFunctions.show( rai, "Borders");
-        bvvSourceBorders.setDisplayRange( 0, 2 );
-        bvvSourceBorders.setColor(new ARGBType(0x00FF00FF));
-
-        ImageJFunctions.show(labelImage, "Labels");
-        final BvvStackSource< ? > bvvSourceLabels = BvvFunctions.show( labelImage, "Labels", BvvOptions.options().addTo(bvvSourceBorders));
-        bvvSourceLabels.setDisplayRange( 0, 350 );
-        bvvSourceLabels.setColor(new ARGBType(0xFF00FF00));
-
+//        final SharedQueue queue = new SharedQueue( Runtime.getRuntime().availableProcessors()-1 );
+//        Img<UnsignedByteType> nonVRAI = get3DBorderLabelImage(labelImage);
+//        RandomAccessibleInterval<Volatile<UnsignedByteType>> rai = VolatileViews.wrapAsVolatile(nonVRAI, queue);
+//
+//        //ImageJFunctions.show(nonVRAI, "Borders"); // SLOW -> triggers a lot of computation. Remove Thread.sleep in this file if you want to do it.
+//
+//        final BvvStackSource< ? > bvvSourceBorders = BvvFunctions.show( rai, "Borders");
+//        bvvSourceBorders.setDisplayRange( 0, 2 );
+//        bvvSourceBorders.setColor(new ARGBType(0x00FF00FF));
+//
+//        ImageJFunctions.show(labelImage, "Labels");
+        final BvvStackSource< ? > bvvSourceLabels8Bit = BvvFunctions.show( labelImage8, "Labels", BvvOptions.options());
+        bvvSourceLabels8Bit.setDisplayRange( 0, 350 );
+        bvvSourceLabels8Bit.setColor(new ARGBType(0xFF00FF00));
+        AffineTransform3D shift = new AffineTransform3D();
+        
+        shift.translate( 512.,0.0,0.0 );
+        final BvvStackSource< ? > bvvSourceLabels16Bit = BvvFunctions.show( labelImage16, "Labels", 
+        		BvvOptions.options().addTo( bvvSourceLabels8Bit ).sourceTransform( shift ));
+        bvvSourceLabels16Bit.setDisplayRange( 0, 350 );
+        bvvSourceLabels16Bit.setColor(new ARGBType(0xFFFF0000));
     }
 
     public static RandomAccessibleInterval<FloatType> getFloatLabelImage(long[] imageVoxelSize, int numberOfPoints) {

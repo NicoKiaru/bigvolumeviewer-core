@@ -28,13 +28,13 @@
  */
 package bvv.core.render;
 
-import static bvv.core.backend.Texture.InternalFormat.R8;
 import static com.jogamp.opengl.GL.GL_ALWAYS;
 import static com.jogamp.opengl.GL.GL_BLEND;
 import static com.jogamp.opengl.GL.GL_DEPTH_TEST;
 import static com.jogamp.opengl.GL.GL_ONE_MINUS_SRC_ALPHA;
 import static com.jogamp.opengl.GL.GL_SRC_ALPHA;
 import static com.jogamp.opengl.GL.GL_UNPACK_ALIGNMENT;
+import static bvv.core.backend.Texture.InternalFormat.R8;
 import static bvv.core.backend.Texture.InternalFormat.R16;
 import static bvv.core.render.VolumeRenderer.RepaintType.DITHER;
 import static bvv.core.render.VolumeRenderer.RepaintType.FULL;
@@ -220,7 +220,7 @@ public class VolumeRenderer
 	private MultiVolumeShaderMip createMultiVolumeShader( final VolumeShaderSignature signature )
 	{
 		final MultiVolumeShaderMip progvol = new MultiVolumeShaderMip( signature, true, 1.0 );
-		progvol.setTextureCache( textureCacheR8 );
+		//progvol.setTextureCache( textureCacheR8 );
 		return progvol;
 	}
 
@@ -277,9 +277,9 @@ public class VolumeRenderer
 					multiResStacks.add( ( MultiResolutionStack3D< ? > ) stack );
 					final Object pixelType = stack.getType();
 					if (( pixelType instanceof UnsignedShortType ) || (pixelType instanceof VolatileUnsignedShortType))
-						volumeSignatures.add( new VolumeSignature( MULTIRESOLUTION, USHORT ) );
+						volumeSignatures.add( new VolumeSignature( MULTIRESOLUTION, USHORT, textureCacheR16 ) );
 					else if (( pixelType instanceof UnsignedByteType ) || (pixelType instanceof VolatileUnsignedByteType))
-						volumeSignatures.add( new VolumeSignature( MULTIRESOLUTION, UBYTE ) );
+						volumeSignatures.add( new VolumeSignature( MULTIRESOLUTION, UBYTE, textureCacheR8 ) );
 					else
 						throw new IllegalArgumentException("Multiresolution stack with pixel type "+pixelType.getClass().getName()+" unsupported in BigVolumeViewer.");
 				}
@@ -287,11 +287,11 @@ public class VolumeRenderer
 				{
 					final Object pixelType = stack.getType();
 					if ( pixelType instanceof UnsignedShortType )
-						volumeSignatures.add( new VolumeSignature( SIMPLE, USHORT ) );
+						volumeSignatures.add( new VolumeSignature( SIMPLE, USHORT, null ) );
 					else if ( pixelType instanceof UnsignedByteType )
-						volumeSignatures.add( new VolumeSignature( SIMPLE, UBYTE ) );
+						volumeSignatures.add( new VolumeSignature( SIMPLE, UBYTE, null ) );
 					else if ( pixelType instanceof ARGBType )
-						volumeSignatures.add( new VolumeSignature( SIMPLE, ARGB ) );
+						volumeSignatures.add( new VolumeSignature( SIMPLE, ARGB, null ) );
 					else
 						throw new IllegalArgumentException();
 				}
@@ -312,7 +312,7 @@ public class VolumeRenderer
 					if ( volumeSignatures.get( i ).getSourceStackType() == MULTIRESOLUTION )
 					{
 						final VolumeBlocks volume = volumes.get( mri++ );
-						progvol.setVolume( i, volume );
+						progvol.setVolume( i, volume, volumeSignatures.get( i ).getTextureCache() );
 						minWorldVoxelSize = Math.min( minWorldVoxelSize, volume.getBaseLevelVoxelSizeInWorldCoordinates() );
 					}
 					else
