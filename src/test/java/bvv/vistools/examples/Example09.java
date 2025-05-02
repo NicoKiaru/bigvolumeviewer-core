@@ -33,6 +33,7 @@ import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.interpolation.neighborsearch.NearestNeighborSearchInterpolatorFactory;
 import net.imglib2.neighborsearch.NearestNeighborSearch;
 import net.imglib2.neighborsearch.NearestNeighborSearchOnKDTree;
+import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.Type;
 import net.imglib2.type.numeric.ARGBType;
@@ -59,7 +60,7 @@ public class Example09 {
 
     public static void main(String... args) {
 
-        long[] imageVoxelSize = new long[] { 512, 512, 512 };
+        long[] imageVoxelSize = new long[] { 512, 512, 32 };
         int numberOfPoints = 800;
 
         RandomAccessibleInterval<UnsignedByteType> labelImage_1 = get8BitsLabelImage(imageVoxelSize, numberOfPoints);
@@ -82,11 +83,25 @@ public class Example09 {
         bvvSourceBorders8bits_1.setColor(new ARGBType(0x00FF00FF));
 
 
-        final BvvStackSource< ? > bvvSourceBorders8bits_2 = BvvFunctions.show( rai8bits_2, "Borders 8 bits 2", BvvOptions.options().addTo(bvvSourceBorders8bits_1));
+        AffineTransform3D trX = new AffineTransform3D();
+        trX.translate(512,0,0);
+
+        final BvvStackSource< ? > bvvSourceBorders8bits_2 = BvvFunctions.show( rai8bits_2, "Borders 8 bits 2",
+                BvvOptions.options()
+                          .addTo(bvvSourceBorders8bits_1)
+                          .sourceTransform(trX));
+
         bvvSourceBorders8bits_2.setDisplayRange( 0, 2 );
         bvvSourceBorders8bits_2.setColor(new ARGBType(0x000000FF));
 
-        final BvvStackSource< ? > bvvSourceBorders16bits = BvvFunctions.show( rai16bits, "Borders 16 bits", BvvOptions.options().addTo(bvvSourceBorders8bits_1));
+        trX.translate(512,0,0);
+        final BvvStackSource< ? > bvvSourceBorders16bits = BvvFunctions.show( rai16bits, "Borders 16 bits",
+                BvvOptions.options()
+                        .addTo(bvvSourceBorders8bits_1)
+                        .sourceTransform(trX)
+
+        );
+
         bvvSourceBorders16bits.setDisplayRange( 0, 512 );
         bvvSourceBorders16bits.setColor(new ARGBType(0x0000FFFF));
 
