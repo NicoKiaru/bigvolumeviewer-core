@@ -396,6 +396,10 @@ public class VolumeRenderer
 			this.volume = volume;
 			this.maxLevel = maxLevel;
 		}
+
+		public VolumeBlocks getVolume() {
+			return volume;
+		}
 	}
 
 	private void updateBlocks(
@@ -404,7 +408,7 @@ public class VolumeRenderer
 			final Matrix4f pv )
 	{
 		final List< VolumeAndTasks > tasksPerVolume = new ArrayList<>();
-		int numTasks = 0;
+		int numTasks8bits = 0, numTasks16bits = 0;
 		for ( int i = 0; i < multiResStacks.size(); i++ )
 		{
 			final MultiResolutionStack3D< ? > stack = multiResStacks.get( i );
@@ -415,12 +419,16 @@ public class VolumeRenderer
 			final VolumeBlocks volume = volumes.get( i );
 			volume.init( stack, renderWidth, pv );
 			final List< FillTask > tasks = volume.getFillTasks();
-			numTasks += tasks.size();
+			if (volume.getTextureCache().equals(textureCacheR8)) {
+				numTasks8bits += tasks.size();
+			} else if (volume.getTextureCache().equals(textureCacheR16)) {
+				numTasks16bits += tasks.size();
+			}
 			tasksPerVolume.add( new VolumeAndTasks( tasks, volume, stack.resolutions().size() - 1 ) );
 		}
 
-		A:
-		while ( numTasks > textureCacheR8.getMaxNumTiles() )
+		A8:
+		while ( numTasks8bits > textureCacheR8.getMaxNumTiles()  ) // TODO: does not feel like a good test
 		{
 			tasksPerVolume.sort( Comparator.comparingInt( VolumeAndTasks::numTasks ).reversed() );
 			for ( final VolumeAndTasks vat : tasksPerVolume )
@@ -429,29 +437,60 @@ public class VolumeRenderer
 				if ( baseLevel < vat.maxLevel )
 				{
 					vat.volume.setBaseLevel( baseLevel + 1 );
-					numTasks -= vat.numTasks();
+					numTasks8bits -= vat.numTasks();
 					vat.tasks.clear();
 					vat.tasks.addAll( vat.volume.getFillTasks() );
-					numTasks += vat.numTasks();
-					continue A;
+					numTasks8bits += vat.numTasks();
+					continue A8;
 				}
 			}
 			break;
 		}
 
-		final ArrayList< FillTask > fillTasks = new ArrayList<>();
-		for ( final VolumeAndTasks vat : tasksPerVolume )
-			fillTasks.addAll( vat.tasks );
-		if ( fillTasks.size() > textureCacheR8.getMaxNumTiles() )
-			fillTasks.subList( textureCacheR8.getMaxNumTiles(), fillTasks.size() ).clear();
+		A16:
+		while ( numTasks16bits > textureCacheR16.getMaxNumTiles()  ) // TODO: does not feel like a good test
+		{
+			tasksPerVolume.sort( Comparator.comparingInt( VolumeAndTasks::numTasks ).reversed() );
+			for ( final VolumeAndTasks vat : tasksPerVolume )
+			{
+				final int baseLevel = vat.volume.getBaseLevel();
+				if ( baseLevel < vat.maxLevel )
+				{
+					vat.volume.setBaseLevel( baseLevel + 1 );
+					numTasks16bits -= vat.numTasks();
+					vat.tasks.clear();
+					vat.tasks.addAll( vat.volume.getFillTasks() );
+					numTasks16bits += vat.numTasks();
+					continue A16;
+				}
+			}
+			break;
+		}
 
-		if ( fillTasks.size() > textureCacheR16.getMaxNumTiles() )
-			fillTasks.subList( textureCacheR16.getMaxNumTiles(), fillTasks.size() ).clear();
+		final ArrayList< FillTask > fillTasksR8 = new ArrayList<>();
+		final ArrayList< FillTask > fillTasksR16 = new ArrayList<>();
+
+		for ( final VolumeAndTasks vat : tasksPerVolume ) {
+			if (vat.volume.getTextureCache().equals(textureCacheR8)) {
+				fillTasksR8.addAll(vat.tasks);
+			}
+			if (vat.volume.getTextureCache().equals(textureCacheR16)) {
+				fillTasksR16.addAll(vat.tasks);
+			}
+		}
+
+		if ( fillTasksR8.size() > textureCacheR8.getMaxNumTiles() ) {
+			fillTasksR8.subList(textureCacheR8.getMaxNumTiles(), fillTasksR8.size()).clear();
+		}
+
+		if ( fillTasksR16.size() > textureCacheR16.getMaxNumTiles() ) {
+			fillTasksR16.subList(textureCacheR16.getMaxNumTiles(), fillTasksR16.size()).clear();
+		}
 
 		try
 		{
-			ProcessFillTasks.parallel( textureCacheR8, pboChainR8, context, forkJoinPool, fillTasks );
-			ProcessFillTasks.parallel( textureCacheR16, pboChainR16, context, forkJoinPool, fillTasks );
+			ProcessFillTasks.parallel( textureCacheR8, pboChainR8, context, forkJoinPool, fillTasksR8 );
+			ProcessFillTasks.parallel( textureCacheR16, pboChainR16, context, forkJoinPool, fillTasksR16 );
 		}
 		catch ( final InterruptedException e )
 		{
@@ -459,14 +498,29 @@ public class VolumeRenderer
 		}
 
 		boolean needsRepaint = false;
-		final int timestamp = textureCacheR8.nextTimestamp() + textureCacheR16.nextTimestamp();
+
+		final int timestampR8 = textureCacheR8.nextTimestamp();
 		for ( int i = 0; i < multiResStacks.size(); i++ )
 		{
 			final VolumeBlocks volume = volumes.get( i );
-			final boolean complete = volume.makeLut( timestamp );
-			if ( !complete )
-				needsRepaint = true;
-			volume.getLookupTexture().upload( context );
+			if (volume.getTextureCache().equals(textureCacheR8)) {
+				final boolean complete = volume.makeLut(timestampR8);
+				if (!complete)
+					needsRepaint = true;
+				volume.getLookupTexture().upload(context);
+			}
+		}
+
+		final int timestampR16 = textureCacheR16.nextTimestamp();
+		for ( int i = 0; i < multiResStacks.size(); i++ )
+		{
+			final VolumeBlocks volume = volumes.get( i );
+			if (volume.getTextureCache().equals(textureCacheR16)) {
+				final boolean complete = volume.makeLut(timestampR16);
+				if (!complete)
+					needsRepaint = true;
+				volume.getLookupTexture().upload(context);
+			}
 		}
 
 		if ( needsRepaint )

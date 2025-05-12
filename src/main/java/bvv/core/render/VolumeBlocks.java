@@ -424,4 +424,8 @@ public class VolumeBlocks
 				0, 0, bsz, 0,
 				0.5f * ( bsx - 1 ), 0.5f * ( bsy - 1 ), 0.5f * ( bsz - 1 ), 1 );
 	}
+
+	public TextureCache getTextureCache() {
+		return textureCache;
+	}
 }

@@ -12,7 +12,7 @@ uniform float nw;
 void intersectBox( vec3 r_o, vec3 r_d, vec3 boxmin, vec3 boxmax, out float tnear, out float tfar )
 {
 	// compute intersection of ray with all six bbox planes
-	vec3 invR = 1 / r_d;
+	/*vec3 invR = 1 / r_d;
 	vec3 tbot = invR * ( boxmin - r_o );
 	vec3 ttop = invR * ( boxmax - r_o );
 
@@ -21,8 +21,39 @@ void intersectBox( vec3 r_o, vec3 r_d, vec3 boxmin, vec3 boxmax, out float tnear
 	vec3 tmax = max(ttop, tbot);
 
 	// find the largest tmin and the smallest tmax
-	tnear = max( max( tmin.x, tmin.y ), max( tmin.x, tmin.z ) );
-	tfar = min( min( tmax.x, tmax.y ), min( tmax.x, tmax.z ) );
+	//tnear = max( max( tmin.x, tmin.y ), max( tmin.x, tmin.z ) );
+	tnear = max( max(tmin.x, tmin.y), tmin.z );
+	tfar = min( min( tmax.x, tmax.y ), tmax.z );*/
+
+
+    // Add a small epsilon to prevent division by zero
+    const float eps = 1e-6;
+    vec3 safe_r_d = vec3(
+        abs(r_d.x) < eps ? (r_d.x >= 0.0 ? eps : -eps) : r_d.x,
+        abs(r_d.y) < eps ? (r_d.y >= 0.0 ? eps : -eps) : r_d.y,
+        abs(r_d.z) < eps ? (r_d.z >= 0.0 ? eps : -eps) : r_d.z
+    );
+
+    // compute intersection of ray with all six bbox planes
+    vec3 invR = 1.0 / safe_r_d;
+    vec3 tbot = invR * (boxmin - r_o);
+    vec3 ttop = invR * (boxmax - r_o);
+
+    // re-order intersections to find smallest and largest on each axis
+    vec3 tmin = min(ttop, tbot);
+    vec3 tmax = max(ttop, tbot);
+
+    // find the largest tmin and the smallest tmax
+    tnear = max(max(tmin.x, tmin.y), tmin.z); // Fixed - was using tmin.x twice
+    tfar = min(min(tmax.x, tmax.y), tmax.z);
+
+    // Handle thin volumes by expanding the far intersection slightly
+    // This helps when a volume dimension is extremely small (like 1 pixel)
+    if (any(lessThan(boxmax - boxmin, vec3(1.1)))) {
+        // If any dimension is 1 pixel or very thin, expand tfar slightly
+        tfar = tfar + 0.01;
+    }
+
 }
 
 // ---------------------
@@ -76,7 +107,10 @@ void main()
 		vec4 v = vec4(0);
 		for (int i = 0; i < numSteps; ++i, step += nw + step * fwnw)
 		{
-			vec4 wpos = mix(wfront, wback, step);
+			//vec4 wpos = mix(wfront, wback, step);
+
+			//float step = tnear + float(i) * stepSize;
+            vec4 wpos = wfront + fb * step;
 
 			// $insert{Accumulate}
 			/*

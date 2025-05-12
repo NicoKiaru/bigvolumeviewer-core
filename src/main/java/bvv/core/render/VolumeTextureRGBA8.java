@@ -80,18 +80,18 @@ public class VolumeTextureRGBA8 implements Texture3D
 	@Override
 	public MinFilter texMinFilter()
 	{
-		return MinFilter.LINEAR;
+		return MinFilter.NEAREST;
 	}
 
 	@Override
 	public MagFilter texMagFilter()
 	{
-		return MagFilter.LINEAR;
+		return MagFilter.NEAREST;
 	}
 
 	@Override
 	public Wrap texWrap()
 	{
-		return Wrap.CLAMP_TO_BORDER_ZERO;
+		return Wrap.CLAMP_TO_EDGE;
 	}
 }

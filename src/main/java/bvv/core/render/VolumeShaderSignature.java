@@ -78,7 +78,7 @@ public final class VolumeShaderSignature
 			if ( ! ( o instanceof VolumeSignature ) )
 				return false;
 			final VolumeSignature that = ( VolumeSignature ) o;
-			return sourceStackType == that.sourceStackType && pixelType == that.pixelType;
+			return sourceStackType == that.sourceStackType && pixelType == that.pixelType && textureCache == that.textureCache;
 		}
 
 		@Override

@@ -92,6 +92,6 @@ public class VolumeTextureU8 implements Texture3D
 	@Override
 	public Wrap texWrap()
 	{
-		return Wrap.CLAMP_TO_BORDER_ZERO;
+		return Wrap.CLAMP_TO_EDGE;
 	}
 }
